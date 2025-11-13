@@ -1,0 +1,77 @@
+import pygame
+import random
+
+# Inisialisasi
+pygame.init()
+WIDTH, HEIGHT = 400, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Lompat Tangga - Freminet")
+
+# Load gambar karakter
+CHAR_IMG = pygame.image.load('Freminet-removebg-preview.png')
+CHAR_IMG = pygame.transform.scale(CHAR_IMG, (50, 50))
+
+# Karakter
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = CHAR_IMG
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH//2, HEIGHT - 150)
+        self.vel_y = 0
+
+    def update(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            self.rect.x -= 5
+        if keys[pygame.K_RIGHT]:
+            self.rect.x += 5
+
+        self.vel_y += 0.5  # gravitasi
+        self.rect.y += int(self.vel_y)
+        if self.rect.right > WIDTH:
+            self.rect.right = WIDTH
+        if self.rect.left < 0:
+            self.rect.left = 0
+
+# Tangga
+class Platform(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.Surface((80, 15))
+        self.image.fill((120, 200, 120))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+# Group Sprite
+player = Player()
+platforms = pygame.sprite.Group()
+for i in range(8):
+    p = Platform(random.randint(0, WIDTH-80), i*75)
+    platforms.add(p)
+
+all_sprites = pygame.sprite.Group()
+all_sprites.add(player)
+all_sprites.add(platforms)
+
+# Loop utama
+clock = pygame.time.Clock()
+run = True
+while run:
+    clock.tick(60)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+
+    # Deteksi collision dengan tangga & lompat
+    hits = pygame.sprite.spritecollide(player, platforms, False)
+    if hits and player.vel_y > 0:
+        player.vel_y = -10
+
+    player.update()
+    screen.fill((135, 206, 235))
+    all_sprites.draw(screen)
+    pygame.display.flip()
+
+pygame.quit()
